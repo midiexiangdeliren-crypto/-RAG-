@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>明日方舟 · 剧情问答</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--border:#2a2f3a;--txt:#e6e6e6;
+        --sub:#8b949e;--acc:#2dd4a8;--acc-dim:#1f6f5c;--red:#f85149;--yellow:#d29922}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.65 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+  header h1{font-size:17px;font-weight:600;letter-spacing:.5px}
+  .pill{font-size:12px;padding:2px 10px;border-radius:99px;border:1px solid var(--border);color:var(--sub)}
+  .pill.ok{color:var(--acc);border-color:var(--acc-dim)}
+  .pill.no{color:var(--red);border-color:var(--red)}
+  header .sp{flex:1}
+  button{cursor:pointer;font-family:inherit}
+  .btn{background:var(--panel2);color:var(--txt);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px}
+  .btn:hover{border-color:var(--acc)}
+  .btn.pri{background:var(--acc-dim);border-color:var(--acc-dim);color:#fff}
+  .btn.pri:hover{background:var(--acc)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  main{flex:1;overflow-y:auto;padding:24px 0}
+  .wrap{max-width:860px;margin:0 auto;padding:0 18px}
+  .msg{margin-bottom:18px;display:flex;gap:10px}
+  .msg .who{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+  .msg.user .who{background:#233247;color:#7ab8ff}
+  .msg.bot .who{background:var(--acc-dim);color:#fff}
+  .bubble{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:calc(100% - 60px);white-space:pre-wrap;word-break:break-word}
+  .msg.user{flex-direction:row-reverse}
+  .msg.user .bubble{background:#1a2433}
+  .bubble .cite{display:inline-block;color:var(--acc);cursor:pointer;font-size:12px;padding:0 3px;vertical-align:super}
+  .bubble .cite:hover{text-decoration:underline}
+  .srcs{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .src{font-size:12px;color:var(--sub);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;background:var(--bg)}
+  .src:hover{color:var(--acc);border-color:var(--acc-dim)}
+  .hint{color:var(--sub);font-size:13px;text-align:center;padding:40px 20px 0}
+  .hint b{color:var(--txt)}
+  .cursor{display:inline-block;width:8px;height:16px;background:var(--acc);vertical-align:-2px;animation:bk 1s steps(2) infinite}
+  @keyframes bk{50%{opacity:0}}
+  footer{flex-shrink:0;background:var(--panel);border-top:1px solid var(--border);padding:12px 0}
+  .inputrow{max-width:860px;margin:0 auto;padding:0 18px;display:flex;gap:10px;align-items:flex-end}
+  textarea{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;color:var(--txt);padding:10px 14px;font:inherit;resize:none;height:46px;max-height:140px}
+  textarea:focus{outline:none;border-color:var(--acc-dim)}
+  /* 弹窗 */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;z-index:50}
+  .overlay.hide{display:none}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(440px,92vw)}
+  .modal h2{font-size:18px;margin-bottom:6px}
+  .modal p{color:var(--sub);font-size:13px;margin-bottom:14px}
+  .modal input[type=password],.modal input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--txt);padding:10px 12px;font-size:14px;margin-bottom:6px}
+  .modal input:focus{outline:none;border-color:var(--acc)}
+  .err{color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:8px;word-break:break-all}
+  .modal .btn{width:100%;padding:10px;font-size:14px}
+  /* 设置抽屉 */
+  #settings{position:fixed;top:0;right:-340px;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);transition:right .22s;z-index:40;padding:20px;overflow-y:auto}
+  #settings.open{right:0}
+  #settings h3{font-size:15px;margin-bottom:14px}
+  #settings label{display:block;font-size:12.5px;color:var(--sub);margin:12px 0 4px}
+  #settings select,#settings input{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--txt);padding:7px 10px;font-size:13px}
+  #settings .row{display:flex;gap:8px}
+  /* 片段弹窗 */
+  #frag .modal{width:min(680px,94vw);max-height:80vh;display:flex;flex-direction:column}
+  #fragTitle{font-size:14px;color:var(--acc);margin-bottom:10px}
+  #fragText{white-space:pre-wrap;overflow-y:auto;font-size:14px;color:var(--txt);line-height:1.8}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>◔ 明日方舟 · 剧情问答</h1>
+  <span id="keyPill" class="pill no">未设 key</span>
+  <span class="sp"></span>
+  <button class="btn" id="btnNew">新对话</button>
+  <button class="btn" id="btnSet">设置</button>
+</header>
+
+<main><div class="wrap" id="chat">
+  <div class="hint" id="hint">问点什么吧，比如：<b>博士为什么会失忆</b> ／ <b>弑君者和爱国者是什么关系</b> ／ <b>米莎的真实身份</b><br>回答全部基于本地剧情库检索到的片段，标注 [n] 可点击查看原文。</div>
+</div></main>
+
+<footer><div class="inputrow">
+  <textarea id="q" placeholder="输入问题，Enter 发送，Shift+Enter 换行"></textarea>
+  <button class="btn pri" id="send">发送</button>
+</div></footer>
+
+<!-- key 弹窗 -->
+<div class="overlay" id="keyModal">
+  <div class="modal">
+    <h2>输入 API Key</h2>
+    <p>填写阿里百炼 API key（sk- 开头）。key 校验通过后只保存在本机服务进程内存中，不落盘；服务重启后需重新输入。</p>
+    <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off">
+    <div class="err" id="keyErr"></div>
+    <button class="btn pri" id="keyGo">验证并进入</button>
+  </div>
+</div>
+
+<!-- 片段弹窗 -->
+<div class="overlay hide" id="frag">
+  <div class="modal">
+    <div id="fragTitle"></div>
+    <div id="fragText"></div>
+  </div>
+</div>
+
+<!-- 设置抽屉 -->
+<div id="settings">
+  <h3>⚙ 设置</h3>
+  <label>回答模型</label>
+  <select id="sModel">
+    <option value="qwen-plus">qwen-plus（均衡）</option>
+    <option value="qwen-max">qwen-max（最强）</option>
+    <option value="qwen-flash">qwen-flash（最快最省）</option>
+    <option value="qwen-turbo">qwen-turbo</option>
+  </select>
+  <label>检索方式</label>
+  <select id="sSource">
+    <option value="hybrid">混合（向量+关键词，推荐）</option>
+    <option value="vec">仅向量语义</option>
+    <option value="bm25">仅关键词 BM25</option>
+  </select>
+  <label>引用片段数 top-k</label>
+  <input type="number" id="sTop" value="6" min="2" max="12">
+  <label>类型过滤</label>
+  <select id="sType"><option value="">不限</option></select>
+  <label>说话人过滤（可输入筛选）</label>
+  <input type="text" id="sSpeaker" list="dlSpeaker" placeholder="不限">
+  <datalist id="dlSpeaker"></datalist>
+  <label>目录过滤（高级）</label>
+  <input type="text" id="sActivity" list="dlDir" placeholder="如 主线/黑暗时代·上">
+  <datalist id="dlDir"></datalist>
+  <p style="margin-top:16px;font-size:12px;color:var(--sub)">设置即时生效，只影响之后发出的提问。</p>
+  <button class="btn" id="btnChangeKey" style="margin-top:10px;width:100%">更换 API Key</button>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let session = crypto.randomUUID();
+let frags = {};          // {n: {dir,title,code,text}}
+let streaming = false;
+
+// ---------- key ----------
+async function checkHealth(){
+  try{
+    const r = await (await fetch('/api/health')).json();
+    if(r.key_set) return true;
+  }catch(e){ $('keyErr').textContent = '无法连接本地服务，请确认 server.py 正在运行'; }
+  return false;
+}
+async function submitKey(){
+  const key = $('keyInput').value.trim();
+  if(!key){ $('keyErr').textContent = '请输入 key'; return; }
+  $('keyGo').disabled = true; $('keyErr').textContent = '校验中…（会调用一次 embedding）';
+  try{
+    const r = await (await fetch('/api/key', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({key})})).json();
+    if(r.ok){ $('keyModal').classList.add('hide'); setPill(true); loadFilters(); }
+    else $('keyErr').textContent = r.msg || '校验失败';
+  }catch(e){ $('keyErr').textContent = '请求失败: ' + e; }
+  $('keyGo').disabled = false;
+}
+function setPill(ok){
+  const p = $('keyPill');
+  p.className = 'pill ' + (ok ? 'ok' : 'no');
+  p.textContent = ok ? 'key 已就绪' : '未设 key';
+}
+$('keyGo').onclick = submitKey;
+$('keyInput').addEventListener('keydown', e => { if(e.key === 'Enter') submitKey(); });
+$('btnChangeKey').onclick = () => { $('keyErr').textContent=''; $('keyInput').value=''; $('keyModal').classList.remove('hide'); };
+
+// ---------- 过滤项 ----------
+async function loadFilters(){
+  try{
+    const f = await (await fetch('/api/filters')).json();
+    f.types.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; $('sType').appendChild(o); });
+    f.speakers.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; $('dlSpeaker').appendChild(o); });
+    f.dirs.forEach(d => { const o = document.createElement('option'); o.value = o.textContent = d; $('dlDir').appendChild(o); });
+  }catch(e){}
+}
+
+// ---------- 聊天 ----------
+function addMsg(kind, text){
+  const hint = $('hint'); if(hint) hint.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ' + (kind === 'user' ? 'user' : 'bot');
+  div.innerHTML = '<div class="who">' + (kind === 'user' ? '你' : '舟') + '</div>';
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = text;
+  div.appendChild(b);
+  $('chat').appendChild(div);
+  main.scrollTop = main.scrollHeight;
+  return b;
+}
+const main = document.querySelector('main');
+
+function renderCites(bubble, ans){
+  bubble.innerHTML = '';
+  const parts = ans.split(/(\[\d+\])/g);
+  parts.forEach(p => {
+    const m = p.match(/^\[(\d+)\]$/);
+    if(m){
+      const n = +m[1];
+      const a = document.createElement('span');
+      a.className = 'cite'; a.textContent = '[' + n + ']';
+      a.onclick = () => showFrag(n);
+      bubble.appendChild(a);
+    } else bubble.appendChild(document.createTextNode(p));
+  });
+}
+function showFrag(n){
+  const f = frags[n];
+  if(!f) return;
+  $('fragTitle').textContent = '[' + n + '] ' + f.dir + '｜' + f.title + (f.code ? '（' + f.code + '）' : '');
+  $('fragText').textContent = f.text;
+  $('frag').classList.remove('hide');
+}
+$('frag').onclick = e => { if(e.target === $('frag')) $('frag').classList.add('hide'); };
+
+async function send(){
+  if(streaming) return;
+  const q = $('q').value.trim();
+  if(!q) return;
+  $('q').value = ''; $('q').style.height = 'auto';
+  addMsg('user', q);
+  streaming = true; $('send').disabled = true;
+
+  const bubble = addMsg('bot', '');
+  bubble.innerHTML = '<span class="cursor"></span>';
+  let ans = '';
+  try{
+    const resp = await fetch('/api/ask', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question: q, session_id: session,
+        model: $('sModel').value, top: +$('sTop').value, source: $('sSource').value,
+        type_f: $('sType').value, speaker: $('sSpeaker').value.trim(),
+        activity: $('sActivity').value.trim()})});
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      buf += dec.decode(value, {stream:true});
+      const chunks = buf.split('\n\n');
+      buf = chunks.pop();
+      for(const c of chunks){
+        if(!c.startsWith('data: ')) continue;
+        const ev = JSON.parse(c.slice(6));
+        if(ev.type === 'sources'){
+          frags = {}; ev.sources.forEach(s => frags[s.i] = s);
+        }else if(ev.type === 't'){
+          ans += ev.v;
+          renderCites(bubble, ans);
+          bubble.appendChild(document.createElement('span')).className = 'cursor';
+        }else if(ev.type === 'empty'){
+          bubble.textContent = ev.msg;
+        }else if(ev.type === 'err'){
+          ans += '\n⚠ ' + ev.msg;
+          bubble.textContent = ans || ev.msg;
+        }
+      }
+    }
+    renderCites(bubble, ans);                 // 最终渲染: [n] 可点击, 无光标
+    if(ans){
+      const sdiv = document.createElement('div');
+      sdiv.className = 'srcs';
+      Object.values(frags).forEach(s => {
+        const el = document.createElement('span');
+        el.className = 'src';
+        el.textContent = '[' + s.i + '] ' + s.title + (s.code ? '（' + s.code + '）' : '');
+        el.onclick = () => showFrag(s.i);
+        sdiv.appendChild(el);
+      });
+      bubble.appendChild(sdiv);
+    }
+  }catch(e){
+    bubble.textContent = '请求失败: ' + e;
+  }
+  streaming = false; $('send').disabled = false;
+  main.scrollTop = main.scrollHeight;
+  $('q').focus();
+}
+$('send').onclick = send;
+$('q').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+$('q').addEventListener('input', () => {
+  $('q').style.height = 'auto';
+  $('q').style.height = Math.min(140, $('q').scrollHeight) + 'px';
+});
+
+// ---------- 其它 ----------
+$('btnNew').onclick = () => {
+  session = crypto.randomUUID(); frags = {};
+  $('chat').innerHTML = '<div class="hint" id="hint">问点什么吧，比如：<b>博士为什么会失忆</b> ／ <b>弑君者和爱国者是什么关系</b> ／ <b>米莎的真实身份</b><br>回答全部基于本地剧情库检索到的片段，标注 [n] 可点击查看原文。</div>';
+};
+$('btnSet').onclick = () => $('settings').classList.toggle('open');
+document.addEventListener('click', e => {
+  const s = $('settings');
+  if(s.classList.contains('open') && !s.contains(e.target) && e.target !== $('btnSet')) s.classList.remove('open');
+});
+
+// ---------- 启动 ----------
+(async () => {
+  if(await checkHealth()){ $('keyModal').classList.add('hide'); setPill(true); loadFilters(); }
+  else { $('keyInput').focus(); }
+})();
+</script>
+</body>
+</html>

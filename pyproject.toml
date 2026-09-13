@@ -1,0 +1,13 @@
+[project]
+name = "rag"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.15.0",
+    "fastapi>=0.141.1",
+    "jieba>=0.42.1",
+    "numpy>=2.5.3",
+    "openai>=3.13.0",
+    "rank-bm25>=0.2.2",
+    "uvicorn>=0.52.4",
+]

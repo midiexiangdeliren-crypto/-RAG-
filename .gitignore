@@ -1,0 +1,13 @@
+# 生成的索引数据 (可按 README 步骤重新生成)
+chunks.jsonl
+chunks.sqlite
+vectors.faiss
+faiss_ids.json
+bm25.pkl
+
+# 环境与缓存
+.venv/
+__pycache__/
+*.pyc
+.env
+*.log
