@@ -64,6 +64,9 @@ uv run python convert_arknights_story.py
 uv run python chunk_story.py
 
 # 3. 入库
+#    embed 需要百炼 key, 先设置环境变量 (PowerShell 写法; CMD 用 set ARK_EMBED_API_KEY=sk-...)
+$env:ARK_EMBED_API_KEY="sk-你的百炼key"
+
 uv run python embed_store.py build       # SQLite + BM25, 无需 key
 uv run python embed_store.py embed       # faiss 向量, 需要百炼 key
 
