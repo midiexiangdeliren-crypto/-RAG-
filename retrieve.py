@@ -35,7 +35,8 @@ def search(query, source='hybrid', top=6, activity='', type_f='', speaker=''):
         qv = np.asarray(cli.embeddings.create(
             model=cfg['model'], input=[query]).data[0].embedding, dtype=np.float32)
         qv /= (np.linalg.norm(qv) + 1e-12)
-        idx = faiss.read_index(FAISS_F)
+        # faiss 的 C++ 读文件不支持非 ASCII 路径(如中文文件夹), 先用 Python 读字节再反序列化
+        idx = faiss.deserialize_index(np.frombuffer(open(FAISS_F, 'rb').read(), dtype=np.uint8))
         ids = json.load(open(os.path.join(HERE, 'faiss_ids.json')))
         D, I = idx.search(qv[None, :], 50)
         vec_hits = [(ids[i], float(s)) for s, i in zip(D[0], I[0]) if i >= 0]

@@ -158,19 +158,35 @@ def ask(b: AskBody):
 
 
 # ---------------- 启动 ----------------
+def _port_free(port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('127.0.0.1', port))
+            return True
+        except OSError:
+            return False
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--port', type=int, default=8600)
     ap.add_argument('--no-open', dest='no_open', action='store_true')
     args = ap.parse_args()
-    url = 'http://127.0.0.1:%d' % args.port
+    port = args.port
+    if not _port_free(port):
+        for p in range(port + 1, port + 20):
+            if _port_free(p):
+                print('端口 %d 被占用, 改用 %d' % (port, p))
+                port = p
+                break
+    url = 'http://127.0.0.1:%d' % port
     if not args.no_open:
         t = threading.Timer(1.5, lambda: webbrowser.open(url))
         t.daemon = True
         t.start()
     print('剧情问答服务: %s  (Ctrl+C 停止)' % url)
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=args.port, log_level='warning')
+    uvicorn.run(app, host='127.0.0.1', port=port, log_level='warning')
 
 if __name__ == '__main__':
     main()

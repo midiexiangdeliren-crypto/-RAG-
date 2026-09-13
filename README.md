@@ -95,6 +95,18 @@ uv run python server.py                  # 自动打开 http://127.0.0.1:8600
 
 首次打开会弹出 key 输入窗口，校验通过即可开始提问。回答中的 `[n]` 引用可点击查看对应剧情片段原文；右侧设置面板可切换模型（qwen-plus / qwen-max / qwen-flash）、检索方式（混合 / 向量 / BM25）、top-k 与说话人 / 类型过滤。
 
+### 打包为 Windows 免安装软件（可选）
+
+在本机构建单文件夹发行版（内置已建好的检索索引，`dist/` 产物约 400MB）：
+
+```bash
+uv add --dev pyinstaller
+uv run pyinstaller 剧情问答.spec --noconfirm
+# 产物: dist/明日方舟剧情问答/剧情问答.exe, 双击即用, 压缩成 zip 即可分发
+```
+
+`剧情问答.spec` 会把静态页、干员词表和索引数据一并打进包里；若想要不含索引的小包（接收者自行建库），删除 spec 中 `datas` 里的 `chunks.sqlite / vectors.faiss / faiss_ids.json / bm25.pkl` 四行再构建。
+
 ## 常见问题
 
 - **API key 放在哪里？** 只通过环境变量或网页弹窗传入，运行时保存在进程内存，不写入任何文件。`embed_config.json` 里只有端点和模型名，无敏感信息。

@@ -11,3 +11,8 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "uvicorn>=0.52.4",
 ]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]

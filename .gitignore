@@ -11,3 +11,7 @@ __pycache__/
 *.pyc
 .env
 *.log
+
+# PyInstaller 构建产物
+build/
+dist/
